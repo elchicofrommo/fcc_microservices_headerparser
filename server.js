@@ -13,6 +13,16 @@ app.use(cors({optionSuccessStatus: 200}));  // some legacy browsers choke on 204
 // http://expressjs.com/en/starter/static-files.html
 app.use(express.static('public'));
 
+function simpleRequestLogger(req, resp, next){
+	var time = (new Date()).toUTCString();
+  console.log(`[${time}] req.method='${req.method}' req.path='${req.path}' req.ip='${req.ip}'`);
+  console.log(`[${time}] req.body='${JSON.stringify(req.body)}'`);
+  next();
+}
+
+app.use(simpleRequestLogger);
+
+
 // http://expressjs.com/en/starter/basic-routing.html
 app.get("/", function (req, res) {
   res.sendFile(__dirname + '/views/index.html');
@@ -24,7 +34,13 @@ app.get("/api/hello", function (req, res) {
   res.json({greeting: 'hello API'});
 });
 
+const parseHeader = require('./header.js').parseHeader;
 
+app.get("/api/whoami", function (req, res){
+	let parsedHeader = parseHeader(req);
+	console.log(`The parsed header is ${JSON.stringify(parsedHeader)}`);
+	res.send(parsedHeader);
+});
 
 // listen for requests :)
 var listener = app.listen(process.env.PORT, function () {
